@@ -8,7 +8,7 @@ while (<INPUTFILE>) {
     if (/styleUrl/) {
         print "      <styleUrl>#LineStyle$x</styleUrl>\n";
         $x++;
-        die if $x > 119;
+        if ($x == 6) { $x = 0; }
     } else {
         print;
     }
