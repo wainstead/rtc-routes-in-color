@@ -1,0 +1,66 @@
+diff --git a/changeroutecolors.py b/changeroutecolors.py
+index 2c532be..4ee3242 100755
+--- a/changeroutecolors.py
++++ b/changeroutecolors.py
+@@ -1,5 +1,4 @@
+ #!/usr/bin/env python
+-
+ """
+ Convert bus routes from red to many colors.
+ 
+@@ -10,9 +9,19 @@ file to make all the routes different colors so they are visually
+ distinct.
+ """
+ 
++import random
+ import xml.dom.minidom
+ from xml.dom.minidom import Node
+ 
++def colorgenerator(numroutes):
++	"""Python generator to make distinct hex colors"""
++	for color in range(0, 0xffffff, 0xffffff / numroutes):
++		# The KMZ file's doc.kml file uses four digit color
++		# values. We'll leave the fourth digit the same ('fa'); the
++		# first three hex digits determine the route color.
++		newcolor =  "%06Xfa" % color
++		yield newcolor.lower()
++
+ doc = xml.dom.minidom.parse('doc.kml')
+ # Each RTC bus route lives in a node 'Placemark'
+ nodes = doc.getElementsByTagName('Placemark')
+@@ -20,12 +29,31 @@ nodes = doc.getElementsByTagName('Placemark')
+ mapping = dict()
+ for node in nodes:
+     name = node.getElementsByTagName('name')[0]
+-	# Get the route name
++	# Get the route name, give it a temporary color value
+     mapping[name.firstChild.nodeValue] = 'ffffffff'
+ 
+ numroutes = len(mapping.keys()) # as of this writing, 119 routes
+ 
+-for color in range(0, 0xffffff, 0xffffff / 119):
+-    newcolor =  "#%Xfa" % color
+-    print newcolor.lower()
++newstyles = list()
++
++doc_element = doc.getElementsByTagName('Document')[0]
++
++for idx, stylecolor in enumerate(colorgenerator2(numroutes)):
++	doc_element.appendChild("""
++  <Style id="LineStyle%s">
++    <LabelStyle>
++      <color>00000000</color>
++      <scale>0.000000</scale>
++    </LabelStyle>
++    <LineStyle>
++      <color>%s</color>
++      <width>1.700000</width>
++    </LineStyle>
++    <PolyStyle>
++      <color>00000000</color>
++      <outline>0</outline>
++    </PolyStyle>
++  </Style>""" % (idx, stylecolor))
++
++print doc.toxml()
+ 
